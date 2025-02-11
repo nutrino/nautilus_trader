@@ -127,9 +127,24 @@ def _build_rust_libs() -> None:
             # Enable features needed for main build, but not high_precision
             features = ["--features", "ffi,python,extension-module"]
 
+        target = os.environ.get("CARGO_TARGET")  # Check for explicitly set target first
+
+        if not target:  # Determine target automatically if not set
+            machine = platform.machine()
+            if machine == "arm64" or machine == "aarch64":
+                target = "aarch64-apple-darwin" # Or linux, as appropriate
+            elif machine == "x86_64":
+                target = "x86_64-apple-darwin" # Or linux, as appropriate
+            elif machine == "i386":
+                target = "i686-apple-darwin" # Or linux, as appropriate
+            else:
+                print(f"Unsupported architecture: {machine}")
+                sys.exit(1)  # Exit with an error code
+
         cmd_args = [
             "cargo",
             "build",
+            f"--target={target}",
             *build_options.split(),
             *features,
         ]
